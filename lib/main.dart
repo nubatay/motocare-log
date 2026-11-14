@@ -4,8 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
-    url: 'https://supabase.com/dashboard/project/yfxleiyitrqzksmljjyp',
-    publishableKey: 'sb_publishable_pEBKq6u2HNaiRDDNyVAB7Q_bvVqCBNO',
+    url: 'https://yfxleiyitrqzksmljjyp.supabase.co/rest/v1/',
+    publishableKey: 'sb_publishable_FYSGTk5mPRJFv9tjylJ0yQ_fclXf1_U',
   );
   runApp(const MotoCareApp());
 }
