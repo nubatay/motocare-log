@@ -1,17 +1,26 @@
-# motocare_log
+# MotoCare Log
 
-A new Flutter project.
+A Flutter app that helps motorcycle riders track maintenance, mileage, and service reminders.
 
-## Getting Started
+## Features
+- Manage account (register, 30-day login session)
+- Manage motorcycles (add, switch, edit, archive)
+- Manage odometer (readings, daily distance, estimated mileage)
+- Manage service records and service intervals
+- Renewal dates, reminders, and expense summary
 
-This project is a starting point for a Flutter application.
+## Tech stack
+- Flutter and Dart
+- Supabase (PostgreSQL, Auth, row-level security)
 
-A few resources to get you started if this is your first Flutter project:
+## Development model
+Incremental with a light Agile approach. See the task board for progress.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Setup
+1. Install Flutter and run `flutter pub get`.
+2. Create a Supabase project and run the SQL schema.
+3. Add your Supabase URL and publishable key in `lib/main.dart`.
+4. Run `flutter run -d chrome`.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Status
+In development for a school project, due Dec 4.
