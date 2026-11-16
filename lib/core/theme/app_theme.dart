@@ -126,7 +126,6 @@ class AppTheme {
       // OutlinedButton = tertiary actions ("Archive", "Cancel").
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

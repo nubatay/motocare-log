@@ -11,6 +11,8 @@ import 'core/theme/app_theme.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/presentation/auth_gate.dart';
+import 'features/motorcycles/providers/motorcycle_provider.dart';
+import 'features/motorcycles/data/motorcycle_repository.dart';
 
 Future<void> main() async {
   // Ensures Flutter bindings are ready before calling Supabase.
@@ -43,6 +45,12 @@ class MotoCareApp extends StatelessWidget {
         ChangeNotifierProvider<AuthProvider>(
           // context.read grabs the AuthRepository we just created above.
           create: (context) => AuthProvider(context.read<AuthRepository>()),
+        ),
+        Provider<MotorcycleRepository>(
+          create: (_) => MotorcycleRepository(supabase),
+        ),
+        ChangeNotifierProvider<MotorcycleProvider>(
+          create: (context) => MotorcycleProvider(context.read<MotorcycleRepository>()),
         ),
       ],
       child: MaterialApp(
