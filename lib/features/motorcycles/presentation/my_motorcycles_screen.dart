@@ -1,11 +1,11 @@
 // The main dashboard showing the rider's motorcycles.
-// Now fully connected to the Add/Edit screen and the AuthProvider for Logout.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../odometer/presentation/odometer_screen.dart'; // <-- NEW IMPORT
 import '../data/motorcycle_repository.dart';
 import '../providers/motorcycle_provider.dart';
 import 'add_edit_motorcycle_screen.dart';
@@ -21,7 +21,6 @@ class _MyMotorcyclesScreenState extends State<MyMotorcyclesScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch motorcycles AFTER the first frame so we don't trigger a build error.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MotorcycleProvider>().loadMotorcycles();
     });
@@ -40,7 +39,6 @@ class _MyMotorcyclesScreenState extends State<MyMotorcyclesScreen> {
             icon: const Icon(Icons.logout),
             tooltip: 'Log out',
             onPressed: () {
-              // Wired up to AuthProvider. AuthGate will handle the screen swap.
               context.read<AuthProvider>().logout();
             },
           ),
@@ -52,7 +50,6 @@ class _MyMotorcyclesScreenState extends State<MyMotorcyclesScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // Navigate to the Add screen (bike: null means "Add Mode").
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => const AddEditMotorcycleScreen(),
@@ -66,12 +63,10 @@ class _MyMotorcyclesScreenState extends State<MyMotorcyclesScreen> {
   }
 
   Widget _buildBody(MotorcycleProvider provider, ThemeData theme) {
-    // 1. Loading State
     if (provider.isLoading && provider.activeBikes.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    // 2. Error State
     if (provider.errorMessage != null) {
       return Center(
         child: Padding(
@@ -85,7 +80,6 @@ class _MyMotorcyclesScreenState extends State<MyMotorcyclesScreen> {
       );
     }
 
-    // 3. Empty State
     if (provider.activeBikes.isEmpty && provider.archivedBikes.isEmpty) {
       return ListView(
         children: [
@@ -111,11 +105,9 @@ class _MyMotorcyclesScreenState extends State<MyMotorcyclesScreen> {
       );
     }
 
-    // 4. Data State
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.md),
       children: [
-        // --- Active Bikes Section ---
         if (provider.activeBikes.isNotEmpty) ...[
           Text(
             'Garage',
@@ -128,7 +120,6 @@ class _MyMotorcyclesScreenState extends State<MyMotorcyclesScreen> {
           ...provider.activeBikes.map((bike) => _BikeCard(bike: bike)),
         ],
 
-        // --- Archived Bikes Section ---
         if (provider.archivedBikes.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xl),
           const Divider(),
@@ -144,7 +135,6 @@ class _MyMotorcyclesScreenState extends State<MyMotorcyclesScreen> {
           ...provider.archivedBikes.map((bike) => _BikeCard(bike: bike)),
         ],
 
-        // Add extra padding at the bottom so the FAB doesn't cover the last card
         const SizedBox(height: 80),
       ],
     );
@@ -168,7 +158,6 @@ class _BikeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top row: Nickname, Model, Active Badge
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -213,18 +202,33 @@ class _BikeCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             
-            // Odometer
-            Row(
-              children: [
-                Icon(Icons.speed, size: 20, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
-                Text(
-                  '${bike.currentOdometer.toString()} km',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+            // --- UPDATED: Clickable Odometer Row ---
+            InkWell(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => OdometerScreen(bike: bike)),
+                );
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: Row(
+                  children: [
+                    Icon(Icons.speed, size: 20, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${bike.currentOdometer.toString()} km',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(Icons.chevron_right, size: 16, color: theme.colorScheme.primary),
+                  ],
                 ),
-              ],
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
 
@@ -239,9 +243,18 @@ class _BikeCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                 ],
+                // --- UPDATED: Added explicit Odometer button ---
                 OutlinedButton(
                   onPressed: () {
-                    // Navigate to the Edit screen, passing the bike data.
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => OdometerScreen(bike: bike)),
+                    );
+                  },
+                  child: const Text('Odometer'),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => AddEditMotorcycleScreen(bike: bike),
