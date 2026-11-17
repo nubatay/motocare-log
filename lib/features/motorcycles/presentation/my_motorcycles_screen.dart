@@ -1,11 +1,11 @@
-// The main dashboard showing the rider's motorcycles.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../auth/providers/auth_provider.dart';
-import '../../odometer/presentation/odometer_screen.dart'; // <-- NEW IMPORT
+import '../../odometer/presentation/odometer_screen.dart'; 
+import '../../services/presentation/service_screen.dart';
 import '../data/motorcycle_repository.dart';
 import '../providers/motorcycle_provider.dart';
 import 'add_edit_motorcycle_screen.dart';
@@ -202,7 +202,7 @@ class _BikeCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             
-            // --- UPDATED: Clickable Odometer Row ---
+            // Clickable Odometer Row
             InkWell(
               onTap: () {
                 Navigator.of(context).push(
@@ -232,38 +232,49 @@ class _BikeCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
 
-            // Action Buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (!bike.isActive && !bike.isArchived) ...[
-                  TextButton(
-                    onPressed: () => provider.switchActiveMotorcycle(bike.id),
-                    child: const Text('Switch to this'),
+            // Action Buttons (Changed Row to Wrap to handle 3 buttons)
+            Align(
+              alignment: Alignment.centerRight,
+              child: Wrap(
+                spacing: 8.0,
+                runSpacing: 8.0,
+                alignment: WrapAlignment.end,
+                children: [
+                  if (!bike.isActive && !bike.isArchived)
+                    TextButton(
+                      onPressed: () => provider.switchActiveMotorcycle(bike.id),
+                      child: const Text('Switch to this'),
+                    ),
+                  OutlinedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => OdometerScreen(bike: bike)),
+                      );
+                    },
+                    child: const Text('Odometer'),
                   ),
-                  const SizedBox(width: 8),
+                  // --- NEW SERVICES BUTTON ---
+                  OutlinedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => ServiceScreen(bike: bike)),
+                      );
+                    },
+                    child: const Text('Services'),
+                  ),
+                  // ----------------------------
+                  OutlinedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => AddEditMotorcycleScreen(bike: bike),
+                        ),
+                      );
+                    },
+                    child: const Text('Edit'),
+                  ),
                 ],
-                // --- UPDATED: Added explicit Odometer button ---
-                OutlinedButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => OdometerScreen(bike: bike)),
-                    );
-                  },
-                  child: const Text('Odometer'),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => AddEditMotorcycleScreen(bike: bike),
-                      ),
-                    );
-                  },
-                  child: const Text('Edit'),
-                ),
-              ],
+              ),
             ),
           ],
         ),

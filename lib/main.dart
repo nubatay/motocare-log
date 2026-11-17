@@ -15,6 +15,8 @@ import 'features/motorcycles/data/motorcycle_repository.dart';
 import 'features/motorcycles/providers/motorcycle_provider.dart';
 import 'features/odometer/data/odometer_repository.dart';
 import 'features/odometer/providers/odometer_provider.dart';
+import 'features/services/data/service_repository.dart';
+import 'features/services/providers/service_provider.dart';
 
 Future<void> main() async {
   // Ensures Flutter bindings are ready before calling Supabase.
@@ -62,6 +64,14 @@ class MotoCareApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<OdometerProvider>(
           create: (context) => OdometerProvider(context.read<OdometerRepository>()),
+        ),
+
+        // --- SERVICES ---
+        Provider<ServiceRepository>(
+          create: (_) => ServiceRepository(supabase),
+        ),
+        ChangeNotifierProvider<ServiceProvider>(
+          create: (context) => ServiceProvider(context.read<ServiceRepository>()),
         ),
       ],
       child: MaterialApp(
