@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
 import 'login_screen.dart';
-import '../../motorcycles/presentation/my_motorcycles_screen.dart';
+import '../../dashboard/presentation/main_layout.dart';
 
 
 class AuthGate extends StatelessWidget {
@@ -20,7 +20,7 @@ class AuthGate extends StatelessWidget {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
         if (authProvider.isLoggedIn) {
-          return const MyMotorcyclesScreen();
+          return const MainLayout();
         }
         return const LoginScreen();
       },
