@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../motorcycles/presentation/my_motorcycles_screen.dart';
 import 'dashboard_screen.dart';
+import '../../services/presentation/history_screen.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -26,7 +27,7 @@ class _MainLayoutState extends State<MainLayout> {
   final List<Widget> _tabs = [
     const DashboardScreen(),
     const MyMotorcyclesScreen(),
-    const HistoryPlaceholder(),
+    const HistoryScreen(),
     const MorePlaceholder(),
   ];
 
