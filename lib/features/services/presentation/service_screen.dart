@@ -7,14 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../core/validators.dart';
 import '../../motorcycles/data/motorcycle_repository.dart';
-import '../../motorcycles/providers/motorcycle_provider.dart';
 import '../../odometer/providers/odometer_provider.dart';
-import '../data/service_repository.dart';
 import '../domain/service_calculator.dart';
 import '../providers/service_provider.dart';
 import 'service_history_screen.dart';
+import 'log_service_screen.dart';
+
 
 class ServiceScreen extends StatefulWidget {
   final Motorcycle bike;
@@ -54,142 +53,6 @@ class _ServiceScreenState extends State<ServiceScreen> {
     }
   }
 
-  void _showLogServiceDialog() {
-    final serviceProvider = context.read<ServiceProvider>();
-    final odometerProvider = context.read<OdometerProvider>();
-    final bikeProvider = context.read<MotorcycleProvider>();
-    final estimatedOdo = odometerProvider.estimate?.estimatedKm ?? widget.bike.currentOdometer;
-
-    // Find the service type that needs attention most, or default to the first one
-    ServiceType? selectedType;
-    if (serviceProvider.overviews.isNotEmpty) {
-      final overdue = serviceProvider.overviews.where((o) => o.status.status == ServiceStatus.overdue);
-      selectedType = overdue.isNotEmpty ? overdue.first.type : serviceProvider.overviews.first.type;
-    }
-
-    final odoController = TextEditingController(text: estimatedOdo.toString());
-    final costController = TextEditingController();
-    final notesController = TextEditingController();
-    DateTime selectedDate = DateTime.now();
-    final formKey = GlobalKey<FormState>();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Log Service'),
-              content: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // 1. Service Type Dropdown
-                      DropdownButtonFormField<ServiceType>(
-                        initialValue: selectedType, 
-                        items: serviceProvider.overviews.map((o) {
-                          return DropdownMenuItem(
-                            value: o.type,
-                            child: Text(o.type.name, overflow: TextOverflow.ellipsis),
-                          );
-                        }).toList(),
-                        onChanged: (val) => setState(() => selectedType = val),
-                        decoration: const InputDecoration(labelText: 'Service Type'),
-                        validator: (val) => val == null ? 'Select a service' : null,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      // 2. Odometer
-                      TextFormField(
-                        controller: odoController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Odometer (km)'),
-                        validator: Validators.odometer,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      // 3. Date
-                      Row(
-                        children: [
-                          const Text('Date: '),
-                          TextButton(
-                            onPressed: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: selectedDate,
-                                firstDate: DateTime(1900),
-                                lastDate: DateTime.now(),
-                              );
-                              if (picked != null) setState(() => selectedDate = picked);
-                            },
-                            child: Text('${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-
-                      // 4. Cost
-                      TextFormField(
-                        controller: costController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: const InputDecoration(labelText: 'Cost (Optional)'),
-                        validator: Validators.cost,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      // 5. Notes
-                      TextFormField(
-                        controller: notesController,
-                        maxLines: 2,
-                        decoration: const InputDecoration(labelText: 'Notes (Optional)'),
-                        validator: Validators.notes,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: () async {
-                    if (!formKey.currentState!.validate()) return;
-                    
-                    final odo = int.parse(odoController.text);
-                    final cost = costController.text.trim().isEmpty ? 0.0 : double.parse(costController.text);
-                    
-                    if (!context.mounted) return;
-                    Navigator.pop(context); // Close dialog
-
-                    final success = await serviceProvider.addRecord(
-                      motorcycleId: widget.bike.id,
-                      serviceTypeId: selectedType!.id,
-                      odometerKm: odo,
-                      serviceDate: selectedDate,
-                      cost: cost,
-                      notes: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
-                      estimatedOdometer: estimatedOdo,
-                    );
-
-                    if (success) {
-                      // Refresh the parent screens
-                      bikeProvider.loadMotorcycles();
-                      _refreshData();
-                    }
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -238,7 +101,11 @@ class _ServiceScreenState extends State<ServiceScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showLogServiceDialog,
+        onPressed: () {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => LogServiceScreen(bike: widget.bike), // <-- NEW
+          ));
+        },
         icon: const Icon(Icons.build),
         label: const Text('Log Service'),
       ),

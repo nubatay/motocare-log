@@ -14,6 +14,7 @@ import '../../odometer/providers/odometer_provider.dart';
 import '../../services/domain/service_calculator.dart';
 import '../../services/presentation/service_screen.dart';
 import '../../services/providers/service_provider.dart';
+import '../../services/presentation/log_service_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -218,7 +219,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: FilledButton(
                     onPressed: () {
                       Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => ServiceScreen(bike: activeBike),
+                        builder: (_) => LogServiceScreen(bike: activeBike),
                       ));
                     },
                     child: const Text('Log service'),
