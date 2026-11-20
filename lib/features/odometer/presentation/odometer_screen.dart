@@ -5,11 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../core/validators.dart';
 import '../../motorcycles/data/motorcycle_repository.dart';
 import '../../motorcycles/providers/motorcycle_provider.dart';
-import '../data/odometer_repository.dart';
 import '../providers/odometer_provider.dart';
+import 'update_odometer_screen.dart';
 
 class OdometerScreen extends StatefulWidget {
   final Motorcycle bike;
@@ -36,138 +35,6 @@ class _OdometerScreenState extends State<OdometerScreen> {
           dailyDistanceKm: widget.bike.dailyDistanceKm,
           currentOdometerFallback: widget.bike.currentOdometer,
         );
-  }
-
-  void _showReadingDialog({OdometerReading? readingToEdit}) {
-    final provider = context.read<OdometerProvider>();
-    final latestReading = provider.latestReading;
-    final motorcycleProvider = context.read<MotorcycleProvider>();
-
-    final valueController = TextEditingController(
-      text: readingToEdit?.valueKm.toString() ?? '',
-    );
-    DateTime selectedDate = readingToEdit?.readingDate ?? DateTime.now();
-    final formKey = GlobalKey<FormState>();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text(readingToEdit == null ? 'Add Reading' : 'Edit Reading'),
-              content: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextFormField(
-                      controller: valueController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Odometer (km)'),
-                      validator: (value) {
-                        final baseError = Validators.odometer(value);
-                        if (baseError != null) return baseError;
-
-                        final numValue = int.parse(value!);
-                        // If editing, we allow it to be lower than the current latest,
-                        // but if adding, it must be >= the latest reading.
-                        if (readingToEdit == null &&
-                            latestReading != null &&
-                            numValue < latestReading.valueKm) {
-                          return 'Reading cannot be lower than ${latestReading.valueKm} km.';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      children: [
-                        const Text('Date: '),
-                        TextButton(
-                          onPressed: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: selectedDate,
-                              firstDate: DateTime(1900),
-                              lastDate: DateTime.now(),
-                            );
-                            if (picked != null) {
-                              setState(() => selectedDate = picked);
-                            }
-                          },
-                          child: Text(
-                            '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: () async {
-                    if (!formKey.currentState!.validate()) return;
-
-                    final numValue = int.parse(valueController.text);
-                    
-                    // Unrealistic jump check (e.g. > 1000 km in one entry)
-                    if (readingToEdit == null && latestReading != null) {
-                      final jump = numValue - latestReading.valueKm;
-                      if (jump > 1000) {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (c) => AlertDialog(
-                            title: const Text('Unrealistic Jump'),
-                            content: Text('You entered a jump of $jump km. Is this correct?'),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                              FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Yes, save it')),
-                            ],
-                          ),
-                        );
-                        if (confirm != true) return;
-                      }
-                    }
-
-                    if (!context.mounted) return;
-                    Navigator.pop(context); // Close dialog
-
-                    final success = readingToEdit == null
-                        ? await provider.addReading(
-                            motorcycleId: widget.bike.id,
-                            valueKm: numValue,
-                            date: selectedDate,
-                            dailyDistanceKm: widget.bike.dailyDistanceKm,
-                            currentOdometerFallback: widget.bike.currentOdometer,
-                          )
-                        : await provider.updateReading(
-                            id: readingToEdit.id,
-                            motorcycleId: widget.bike.id,
-                            valueKm: numValue,
-                            date: selectedDate,
-                            dailyDistanceKm: widget.bike.dailyDistanceKm,
-                            currentOdometerFallback: widget.bike.currentOdometer,
-                          );
-
-                    if (success) {
-                      // Use the provider we grabbed at the beginning!
-                      motorcycleProvider.loadMotorcycles();
-                    }
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
   }
 
   Future<void> _deleteReading(String id) async {
@@ -276,11 +143,9 @@ class _OdometerScreenState extends State<OdometerScreen> {
                           '${r.readingDate.year}-${r.readingDate.month.toString().padLeft(2, '0')}-${r.readingDate.day.toString().padLeft(2, '0')} • ${r.source == 'service' ? 'Service Record' : 'Rider Entry'}'),
                       trailing: PopupMenuButton<String>(
                         onSelected: (value) {
-                          if (value == 'edit') _showReadingDialog(readingToEdit: r);
                           if (value == 'delete') _deleteReading(r.id);
                         },
                         itemBuilder: (context) => [
-                          const PopupMenuItem(value: 'edit', child: Text('Edit')),
                           const PopupMenuItem(value: 'delete', child: Text('Delete')),
                         ],
                       ),
@@ -290,7 +155,13 @@ class _OdometerScreenState extends State<OdometerScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showReadingDialog(),
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => UpdateOdometerScreen(bike: widget.bike), // <-- NEW
+            ),
+          );
+        },
         icon: const Icon(Icons.add),
         label: const Text('Add Reading'),
       ),

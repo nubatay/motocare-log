@@ -9,12 +9,12 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../motorcycles/data/motorcycle_repository.dart';
 import '../../motorcycles/providers/motorcycle_provider.dart';
-import '../../odometer/presentation/odometer_screen.dart';
 import '../../odometer/providers/odometer_provider.dart';
 import '../../services/domain/service_calculator.dart';
 import '../../services/presentation/service_screen.dart';
 import '../../services/providers/service_provider.dart';
 import '../../services/presentation/log_service_screen.dart';
+import '../../odometer/presentation/update_odometer_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -207,9 +207,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => OdometerScreen(bike: activeBike),
-                      ));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => UpdateOdometerScreen(bike: activeBike), // <-- NEW
+                        ),
+                      );
                     },
                     child: const Text('Update odometer'),
                   ),
