@@ -7,9 +7,8 @@ import 'package:flutter/foundation.dart';
 import '../data/service_repository.dart';
 import '../domain/service_calculator.dart';
 
-/// A helper class that bundles a ServiceType with its interval, latest record,
-/// and calculated status for easy display in the UI.
 class ServiceOverview {
+  final String intervalId; // <-- NEW: Needed for editing
   final ServiceType type;
   final int? intervalKm;
   final int? intervalMonths;
@@ -17,6 +16,7 @@ class ServiceOverview {
   final ServiceStatusResult status;
 
   const ServiceOverview({
+    required this.intervalId,
     required this.type,
     this.intervalKm,
     this.intervalMonths,
@@ -30,32 +30,22 @@ class ServiceProvider extends ChangeNotifier {
 
   final ServiceRepository _repo;
 
-  // ---------------------------------------------------------------
-  // State
-  // ---------------------------------------------------------------
   List<ServiceOverview> _overviews = [];
   List<ServiceRecord> _records = [];
   bool _isLoading = false;
   String? _errorMessage;
 
-  // ---------------------------------------------------------------
-  // Getters
-  // ---------------------------------------------------------------
   List<ServiceOverview> get overviews => List.unmodifiable(_overviews);
   List<ServiceRecord> get records => List.unmodifiable(_records);
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // ---------------------------------------------------------------
-  // Load Data
-  // ---------------------------------------------------------------
   Future<void> loadData({
     required String motorcycleId,
-    required int estimatedOdometer, // Passed from OdometerProvider/UI
+    required int estimatedOdometer,
   }) async {
     _setLoading(true);
     try {
-      // 1. Fetch all needed data in parallel for speed
       final results = await Future.wait([
         _repo.fetchServiceTypes(),
         _repo.fetchServiceIntervals(motorcycleId),
@@ -68,13 +58,11 @@ class ServiceProvider extends ChangeNotifier {
 
       final List<ServiceOverview> newOverviews = [];
 
-      // 2. Loop through every ServiceType and calculate its status
       for (final type in types) {
-        // Find the custom interval for this bike, or fallback to default
         final interval = intervals.firstWhere(
           (i) => i.serviceTypeId == type.id,
           orElse: () => ServiceInterval(
-            id: '',
+            id: '', // Empty ID means this interval doesn't exist in DB
             motorcycleId: motorcycleId,
             serviceTypeId: type.id,
             intervalKm: type.defaultIntervalKm,
@@ -82,15 +70,11 @@ class ServiceProvider extends ChangeNotifier {
           ),
         );
 
-        // Find the most recent record for this type
         ServiceRecord? latest;
         try {
           latest = _records.firstWhere((r) => r.serviceTypeId == type.id);
-        } catch (_) {
-          // No record found. latest remains null.
-        }
+        } catch (_) {}
 
-        // Calculate the status
         final status = ServiceCalculator.calculateStatus(
           latestRecord: latest,
           intervalKm: interval.intervalKm,
@@ -99,6 +83,7 @@ class ServiceProvider extends ChangeNotifier {
         );
 
         newOverviews.add(ServiceOverview(
+          intervalId: interval.id, // <-- Pass the ID
           type: type,
           intervalKm: interval.intervalKm,
           intervalMonths: interval.intervalMonths,
@@ -117,9 +102,6 @@ class ServiceProvider extends ChangeNotifier {
     }
   }
 
-  // ---------------------------------------------------------------
-  // Add Record
-  // ---------------------------------------------------------------
   Future<bool> addRecord({
     required String motorcycleId,
     required String serviceTypeId,
@@ -139,45 +121,13 @@ class ServiceProvider extends ChangeNotifier {
         cost: cost,
         notes: notes,
       );
-      
-      await loadData(
-        motorcycleId: motorcycleId,
-        estimatedOdometer: estimatedOdometer,
-      );
+      await loadData(motorcycleId: motorcycleId, estimatedOdometer: estimatedOdometer);
       return true;
     } on ServiceFailure catch (e) {
       _errorMessage = e.message;
       return false;
     } catch (_) {
       _errorMessage = 'Could not save service record.';
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // ---------------------------------------------------------------
-  // Delete Record
-  // ---------------------------------------------------------------
-  Future<bool> deleteRecord({
-    required String id,
-    required String motorcycleId,
-    required int estimatedOdometer,
-  }) async {
-    _setLoading(true);
-    try {
-      await _repo.deleteServiceRecord(id);
-      
-      await loadData(
-        motorcycleId: motorcycleId,
-        estimatedOdometer: estimatedOdometer,
-      );
-      return true;
-    } on ServiceFailure catch (e) {
-      _errorMessage = e.message;
-      return false;
-    } catch (_) {
-      _errorMessage = 'Could not delete service record.';
       return false;
     } finally {
       _setLoading(false);
@@ -207,9 +157,72 @@ class ServiceProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> deleteRecord({
+    required String id,
+    required String motorcycleId,
+    required int estimatedOdometer,
+  }) async {
+    _setLoading(true);
+    try {
+      await _repo.deleteServiceRecord(id);
+      await loadData(motorcycleId: motorcycleId, estimatedOdometer: estimatedOdometer);
+      return true;
+    } on ServiceFailure catch (e) {
+      _errorMessage = e.message;
+      return false;
+    } catch (_) {
+      _errorMessage = 'Could not delete service record.';
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   // ---------------------------------------------------------------
-  // Helper
+  // NEW: Update Interval
   // ---------------------------------------------------------------
+  Future<bool> updateInterval({
+    required String id,
+    required String motorcycleId,
+    required int estimatedOdometer,
+    required int? km,
+    required int? months,
+  }) async {
+    _setLoading(true);
+    try {
+      await _repo.updateServiceInterval(id: id, km: km, months: months);
+      
+      // Reload data so the "Due Soon" badges update immediately!
+      await loadData(motorcycleId: motorcycleId, estimatedOdometer: estimatedOdometer);
+      return true;
+    } on ServiceFailure catch (e) {
+      _errorMessage = e.message;
+      return false;
+    } catch (_) {
+      _errorMessage = 'Could not update interval.';
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> resetIntervals({
+    required String motorcycleId,
+    required int estimatedOdometer,
+  }) async {
+    _setLoading(true);
+    try {
+      await _repo.resetServiceIntervals(motorcycleId);
+      await loadData(motorcycleId: motorcycleId, estimatedOdometer: estimatedOdometer);
+      return true;
+    } on ServiceFailure catch (e) {
+      _errorMessage = e.message;
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   void _setLoading(bool value) {
     _isLoading = value;
     if (value) {

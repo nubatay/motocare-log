@@ -10,6 +10,8 @@ import '../../auth/providers/auth_provider.dart';
 import '../../motorcycles/presentation/my_motorcycles_screen.dart';
 import 'dashboard_screen.dart';
 import '../../services/presentation/history_screen.dart';
+import '../../services/presentation/service_intervals_screen.dart';
+import '../../motorcycles/providers/motorcycle_provider.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -107,19 +109,24 @@ class MorePlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('More')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('More options coming soon!'),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: () => context.read<AuthProvider>().logout(),
-              icon: const Icon(Icons.logout),
-              label: const Text('Log out'),
-            ),
-          ],
-        ),
+      body: ListView(
+        children: [
+          ListTile(
+            title: const Text('Service Intervals'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              final bike = context.read<MotorcycleProvider>().activeBike;
+              if (bike != null) {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceIntervalsScreen(bike: bike)));
+              }
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Log out'),
+            onTap: () => context.read<AuthProvider>().logout(),
+          ),
+        ],
       ),
     );
   }
