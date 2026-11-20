@@ -94,18 +94,26 @@ class _AddEditMotorcycleScreenState extends State<AddEditMotorcycleScreen> {
     }
   }
 
-  Future<void> _archiveBike() async {
+    Future<void> _archiveBike() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Archive Motorcycle?'),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Expanded(child: Text('Archive Motorcycle?')),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(context, false),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
         content: const Text(
             'This bike will be hidden from your main list. You can still view it in the Archived section. All service history is kept.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
+          // Removed Cancel button
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Archive'),
@@ -120,18 +128,26 @@ class _AddEditMotorcycleScreenState extends State<AddEditMotorcycleScreen> {
     }
   }
 
-  Future<void> _deleteBike() async {
+    Future<void> _deleteBike() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Permanently?'),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Expanded(child: Text('Delete Permanently?')),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(context, false),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
         content: const Text(
             'WARNING: This will permanently delete this motorcycle AND all of its service records and odometer readings. This cannot be undone.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
+          // Removed Cancel button
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,

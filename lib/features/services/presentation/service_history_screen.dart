@@ -22,6 +22,8 @@ class ServiceHistoryScreen extends StatefulWidget {
 }
 
 class _ServiceHistoryScreenState extends State<ServiceHistoryScreen> {
+  String _selectedFilter = 'All Services';
+
   @override
   void initState() {
     super.initState();
@@ -141,6 +143,11 @@ class _ServiceHistoryScreenState extends State<ServiceHistoryScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<ServiceProvider>();
     final theme = Theme.of(context);
+    final uniqueServices = ['All Services', ...provider.records.map((r) => r.serviceTypeName).toSet()];
+
+    if (!uniqueServices.contains(_selectedFilter)) {
+      _selectedFilter = 'All Services';
+    }
 
     return Scaffold(
       appBar: AppBar(

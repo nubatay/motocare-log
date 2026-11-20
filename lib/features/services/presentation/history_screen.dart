@@ -66,6 +66,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: DropdownButtonFormField<String>(
+              key: ValueKey(_selectedFilter),
               initialValue: _selectedFilter,
               items: uniqueServices.map((name) {
                 return DropdownMenuItem(value: name, child: Text(name));

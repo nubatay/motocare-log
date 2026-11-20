@@ -29,13 +29,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // didChangeDependencies runs whenever a Provider updates.
-    // We use it to check if the active bike changed (e.g. user switched bikes).
     final activeBike = context.watch<MotorcycleProvider>().activeBike;
     
     if (activeBike != null && activeBike.id != _lastLoadedBikeId) {
       _lastLoadedBikeId = activeBike.id;
-      _loadData(activeBike);
+      
+      // FIX: Wait until the current frame is done drawing before loading data
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadData(activeBike);
+      });
     }
   }
 

@@ -16,7 +16,19 @@ class ServiceIntervalsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Edit ${overview.type.name}'),
+        // NEW: Row with Title and X Button
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(child: Text('Edit ${overview.type.name}')),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(), // Removes extra padding
+            ),
+          ],
+        ),
         content: Form(
           key: formKey,
           child: Column(
@@ -38,7 +50,7 @@ class ServiceIntervalsScreen extends StatelessWidget {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          // Removed the Cancel TextButton. Only the Save button remains.
           FilledButton(
             onPressed: () async {
               if (!formKey.currentState!.validate()) return;
@@ -61,15 +73,29 @@ class ServiceIntervalsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _resetDefaults(BuildContext context) async {
+    Future<void> _resetDefaults(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Reset to default?'),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Expanded(child: Text('Reset to default?')),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(c, false),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
         content: const Text('This will restore the factory intervals for all services.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Reset')),
+          // Removed Cancel button
+          FilledButton(
+            onPressed: () => Navigator.pop(c, true), 
+            child: const Text('Reset')
+          ),
         ],
       ),
     );
