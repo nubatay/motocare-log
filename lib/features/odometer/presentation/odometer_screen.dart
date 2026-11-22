@@ -37,14 +37,25 @@ class _OdometerScreenState extends State<OdometerScreen> {
         );
   }
 
-  Future<void> _deleteReading(String id) async {
+    Future<void> _deleteReading(String id) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Delete Reading?'),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Expanded(child: Text('Delete Reading?')),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(c, false),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
         content: const Text('This will permanently delete this reading.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+          // Removed the Cancel button
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () => Navigator.pop(c, true),
