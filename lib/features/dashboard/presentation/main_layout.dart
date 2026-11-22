@@ -14,6 +14,7 @@ import '../../services/presentation/service_intervals_screen.dart';
 import '../../motorcycles/providers/motorcycle_provider.dart';
 import '../../reminders/presentation/reminders_screen.dart';
 import '../../renewals/presentation/renewals_screen.dart';
+import '../../expenses/presentation/expense_summary_screen.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -135,6 +136,13 @@ class MorePlaceholder extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const RemindersScreen()));
+            },
+          ),
+          ListTile(
+            title: const Text('Expense Summary'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpenseSummaryScreen()));
             },
           ),
           ListTile(
