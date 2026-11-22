@@ -13,6 +13,7 @@ import '../../services/presentation/history_screen.dart';
 import '../../services/presentation/service_intervals_screen.dart';
 import '../../motorcycles/providers/motorcycle_provider.dart';
 import '../../reminders/presentation/reminders_screen.dart';
+import '../../renewals/presentation/renewals_screen.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -120,6 +121,13 @@ class MorePlaceholder extends StatelessWidget {
               if (bike != null) {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceIntervalsScreen(bike: bike)));
               }
+            },
+          ),
+          ListTile(
+            title: const Text('Renewal Dates'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const RenewalsScreen()));
             },
           ),
           ListTile(
