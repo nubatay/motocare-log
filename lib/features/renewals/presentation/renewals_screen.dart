@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../motorcycles/data/motorcycle_repository.dart';
 import '../../motorcycles/providers/motorcycle_provider.dart';
 import '../data/renewal_repository.dart';
 import '../providers/renewal_provider.dart';
@@ -24,7 +23,6 @@ class _RenewalsScreenState extends State<RenewalsScreen> {
   }
 
   void _showAddEditDialog({Renewal? renewalToEdit}) {
-    final provider = context.read<RenewalProvider>();
     final bikes = context.read<MotorcycleProvider>().activeBikes;
     
     String selectedType = renewalToEdit?.renewalType ?? 'registration';
@@ -114,19 +112,6 @@ class _RenewalsScreenState extends State<RenewalsScreen> {
                   onPressed: () async {
                     if (!formKey.currentState!.validate()) return;
                     Navigator.pop(context);
-
-                    final success = renewalToEdit == null
-                        ? await provider.addRenewal(
-                            renewalType: selectedType,
-                            motorcycleId: selectedBikeId,
-                            dueDate: selectedDate,
-                          )
-                        : await provider.updateRenewal(
-                            id: renewalToEdit.id,
-                            renewalType: selectedType,
-                            motorcycleId: selectedBikeId,
-                            dueDate: selectedDate,
-                          );
                   },
                   child: const Text('Save'),
                 ),
