@@ -6,7 +6,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../auth/providers/auth_provider.dart';
+import '../../../core/theme/theme_provider.dart';
+import '../../auth/providers/auth_provider.dart'; 
 import '../../motorcycles/presentation/my_motorcycles_screen.dart';
 import 'dashboard_screen.dart';
 import '../../services/presentation/history_screen.dart';
@@ -108,6 +109,43 @@ class HistoryPlaceholder extends StatelessWidget {
 class MorePlaceholder extends StatelessWidget {
   const MorePlaceholder({super.key});
 
+    void _showThemeDialog(BuildContext context) {
+    final themeProvider = context.read<ThemeProvider>();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Appearance'),
+        content: RadioGroup<ThemeMode>(
+          groupValue: themeProvider.themeMode,
+          onChanged: (mode) {
+            if (mode != null) {
+              themeProvider.setThemeMode(mode);
+              Navigator.pop(context);
+            }
+          },
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<ThemeMode>(
+                title: Text('System Default'),
+                value: ThemeMode.system,
+              ),
+              RadioListTile<ThemeMode>(
+                title: Text('Light Mode'),
+                value: ThemeMode.light,
+              ),
+              RadioListTile<ThemeMode>(
+                title: Text('Dark Mode'),
+                value: ThemeMode.dark,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -115,36 +153,39 @@ class MorePlaceholder extends StatelessWidget {
       body: ListView(
         children: [
           ListTile(
+            leading: const Icon(Icons.palette_outlined),
+            title: const Text('Appearance'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showThemeDialog(context),
+          ),
+          ListTile(
+            title: const Text('Renewal Dates'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RenewalsScreen())),
+          ),
+          ListTile(
+            title: const Text('Reminders'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RemindersScreen())),
+          ),
+          ListTile(
             title: const Text('Service Intervals'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               final bike = context.read<MotorcycleProvider>().activeBike;
               if (bike != null) {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceIntervalsScreen(bike: bike)));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No active motorcycle.')));
               }
-            },
-          ),
-          ListTile(
-            title: const Text('Renewal Dates'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const RenewalsScreen()));
-            },
-          ),
-          ListTile(
-            title: const Text('Reminders'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const RemindersScreen()));
             },
           ),
           ListTile(
             title: const Text('Expense Summary'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpenseSummaryScreen()));
-            },
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpenseSummaryScreen())),
           ),
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Log out'),

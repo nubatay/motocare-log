@@ -59,8 +59,9 @@ class AuthRepository {
         email: email.trim(),
         password: password,
       );
-    } on AuthException {
-      // Always show a generic error to prevent account enumeration.
+        } on AuthException {
+      // ADD THIS LINE to see the real error in your terminal: 
+      
       throw const AuthFailure('Invalid email or password.');
     } catch (_) {
       throw const AuthFailure('Could not sign you in. Please try again.');

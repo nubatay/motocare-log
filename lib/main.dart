@@ -1,13 +1,9 @@
-// lib/main.dart
-//
-// Entry point. Initialises Supabase, injects the repositories and
-// providers into the widget tree, and applies the app theme.
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_provider.dart'; // <-- NEW IMPORT
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/presentation/auth_gate.dart';
@@ -21,20 +17,14 @@ import 'features/renewals/data/renewal_repository.dart';
 import 'features/renewals/providers/renewal_provider.dart';
 
 Future<void> main() async {
-  // Ensures Flutter bindings are ready before calling Supabase.
   WidgetsFlutterBinding.ensureInitialized();
-
   await Supabase.initialize(
     url: 'https://yfxleiyitrqzksmljjyp.supabase.co',
-    // Note: The publishable key is safe to use in the client, but 
-    // avoid committing it to public repositories.
     publishableKey: 'sb_publishable_FYSGTk5mPRJFv9tjylJ0yQ_fclXf1_U',
   );
-
   runApp(const MotoCareApp());
 }
 
-// A global shortcut so the repository can access the client easily.
 final supabase = Supabase.instance.client;
 
 class MotoCareApp extends StatelessWidget {
@@ -44,59 +34,45 @@ class MotoCareApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // --- Auth ---
-        Provider<AuthRepository>(
-          create: (_) => AuthRepository(supabase),
-        ),
+        // --- NEW: Theme Provider ---
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+
+        // --- AUTH ---
+        Provider<AuthRepository>(create: (_) => AuthRepository(supabase)),
         ChangeNotifierProvider<AuthProvider>(
-          create: (context) => AuthProvider(context.read<AuthRepository>()),
-        ),
-        
-        // --- Motorcycles ---
-        Provider<MotorcycleRepository>(
-          create: (_) => MotorcycleRepository(supabase),
-        ),
+            create: (context) => AuthProvider(context.read<AuthRepository>())),
+
+        // --- MOTORCYCLES ---
+        Provider<MotorcycleRepository>(create: (_) => MotorcycleRepository(supabase)),
         ChangeNotifierProvider<MotorcycleProvider>(
-          create: (context) => MotorcycleProvider(context.read<MotorcycleRepository>()),
-        ),
-        
-        // --- Odometer ---
-        Provider<OdometerRepository>(
-          create: (_) => OdometerRepository(supabase),
-        ),
+            create: (context) => MotorcycleProvider(context.read<MotorcycleRepository>())),
+
+        // --- ODOMETER ---
+        Provider<OdometerRepository>(create: (_) => OdometerRepository(supabase)),
         ChangeNotifierProvider<OdometerProvider>(
-          create: (context) => OdometerProvider(context.read<OdometerRepository>()),
-        ),
+            create: (context) => OdometerProvider(context.read<OdometerRepository>())),
 
         // --- SERVICES ---
-        Provider<ServiceRepository>(
-          create: (_) => ServiceRepository(supabase),
-        ),
+        Provider<ServiceRepository>(create: (_) => ServiceRepository(supabase)),
         ChangeNotifierProvider<ServiceProvider>(
-          create: (context) => ServiceProvider(context.read<ServiceRepository>()),
-        ),
+            create: (context) => ServiceProvider(context.read<ServiceRepository>())),
 
-                // --- RENEWALS ---
-        Provider<RenewalRepository>(
-          create: (_) => RenewalRepository(supabase),
-        ),
+        // --- RENEWALS ---
+        Provider<RenewalRepository>(create: (_) => RenewalRepository(supabase)),
         ChangeNotifierProvider<RenewalProvider>(
-          create: (context) => RenewalProvider(context.read<RenewalRepository>()),
-        ),
+            create: (context) => RenewalProvider(context.read<RenewalRepository>())),
       ],
-      child: MaterialApp(
-        title: 'MotoCare Log',
-        debugShowCheckedModeBanner: false,
-        
-        // Apply the Material 3 themes
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        
-        // Follows the user's phone/browser setting
-        themeMode: ThemeMode.system,
-        
-        // The AuthGate decides whether to show Login or MyMotorcycles
-        home: const AuthGate(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'MotoCare Log',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: themeProvider.themeMode, // <-- Listens to the provider
+            home: const AuthGate(),
+          );
+        },
       ),
     );
   }
