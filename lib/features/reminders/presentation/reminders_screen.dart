@@ -49,6 +49,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
     final serviceProvider = context.watch<ServiceProvider>();
     final activeBike = bikeProvider.activeBike;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     if (activeBike == null) {
       return Scaffold(
@@ -75,17 +76,21 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
             // OVERDUE SECTION
             if (overdueItems.isNotEmpty) ...[
-              Text('Overdue', style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.error, fontWeight: FontWeight.bold)),
+              Text('Overdue', style: theme.textTheme.titleLarge?.copyWith(color: isDark ? const Color(0xFFFF8A80) : const Color(0xFFD32F2F), fontWeight: FontWeight.bold)),
               const SizedBox(height: AppSpacing.sm),
               ...overdueItems.map((o) => Card(
                 margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                 child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
                   title: Text(o.type.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text('Was due at ${o.status.dueKm ?? ''} km'),
                   trailing: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: theme.colorScheme.errorContainer, borderRadius: BorderRadius.circular(8)),
-                    child: Text('Overdue', style: TextStyle(color: theme.colorScheme.onErrorContainer, fontSize: 12, fontWeight: FontWeight.bold)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF3B1A1D) : const Color(0xFFFDECEA), 
+                      borderRadius: BorderRadius.circular(20)
+                    ),
+                    child: Text('Overdue', style: TextStyle(color: isDark ? const Color(0xFFFF8A80) : const Color(0xFFD32F2F), fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ),
               )),
@@ -95,27 +100,31 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
             // DUE SOON SECTION
             if (dueSoonItems.isNotEmpty) ...[
-              Text('Due soon', style: theme.textTheme.titleLarge?.copyWith(color: Colors.orange.shade800, fontWeight: FontWeight.bold)),
+              Text('Due soon', style: theme.textTheme.titleLarge?.copyWith(color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFED6C02), fontWeight: FontWeight.bold)),
               const SizedBox(height: AppSpacing.sm),
               ...dueSoonItems.map((o) => Card(
                 margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                 child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
                   title: Text(o.type.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text('Due in about ${o.status.dueKm != null ? '${o.status.dueKm! - (activeBike.currentOdometer)} km' : 'soon'}'),
                   trailing: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: Colors.orange.shade200, borderRadius: BorderRadius.circular(8)),
-                    child: Text('Due soon', style: TextStyle(color: Colors.orange.shade900, fontSize: 12, fontWeight: FontWeight.bold)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF33210A) : const Color(0xFFFFF4E5), 
+                      borderRadius: BorderRadius.circular(20)
+                    ),
+                    child: Text('Due soon', style: TextStyle(color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFED6C02), fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ),
               )),
             ],
 
             const SizedBox(height: AppSpacing.xl),
-            const Center(
+            Center(
               child: Text(
                 'On a phone, an alert is also sent.',
-                style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
+                style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic, color: theme.colorScheme.onSurfaceVariant),
               ),
             ),
           ],

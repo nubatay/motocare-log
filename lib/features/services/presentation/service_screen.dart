@@ -1,8 +1,3 @@
-// lib/features/services/presentation/service_screen.dart
-//
-// Displays the service dashboard for a specific motorcycle.
-// Shows status badges (Overdue, Due Soon, OK) and allows logging new services.
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -13,7 +8,6 @@ import '../domain/service_calculator.dart';
 import '../providers/service_provider.dart';
 import 'service_history_screen.dart';
 import 'log_service_screen.dart';
-
 
 class ServiceScreen extends StatefulWidget {
   final Motorcycle bike;
@@ -35,14 +29,12 @@ class _ServiceScreenState extends State<ServiceScreen> {
   Future<void> _refreshData() async {
     final odometerProvider = context.read<OdometerProvider>();
     
-    // Ensure odometer history is loaded so we have an accurate estimate
     await odometerProvider.loadReadings(
       motorcycleId: widget.bike.id,
       dailyDistanceKm: widget.bike.dailyDistanceKm,
       currentOdometerFallback: widget.bike.currentOdometer,
     );
 
-    // Use the estimated odometer, or fallback to the bike's saved odometer
     final estimatedOdo = odometerProvider.estimate?.estimatedKm ?? widget.bike.currentOdometer;
 
     if (mounted) {
@@ -52,7 +44,6 @@ class _ServiceScreenState extends State<ServiceScreen> {
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +94,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => LogServiceScreen(bike: widget.bike), // <-- NEW
+            builder: (_) => LogServiceScreen(bike: widget.bike), 
           ));
         },
         icon: const Icon(Icons.build),
@@ -120,26 +111,26 @@ class _ServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    // Determine badge color and text based on status
     Color badgeColor;
     Color textColor;
     String statusText;
 
     switch (overview.status.status) {
       case ServiceStatus.overdue:
-        badgeColor = theme.colorScheme.errorContainer;
-        textColor = theme.colorScheme.onErrorContainer;
+        badgeColor = isDark ? const Color(0xFF3B1A1D) : const Color(0xFFFDECEA);
+        textColor = isDark ? const Color(0xFFFF8A80) : const Color(0xFFD32F2F);
         statusText = 'Overdue';
         break;
       case ServiceStatus.dueSoon:
-        badgeColor = Colors.orange.shade200;
-        textColor = Colors.orange.shade900;
-        statusText = 'Due Soon';
+        badgeColor = isDark ? const Color(0xFF33210A) : const Color(0xFFFFF4E5);
+        textColor = isDark ? const Color(0xFFFFB74D) : const Color(0xFFED6C02);
+        statusText = 'Due soon';
         break;
       case ServiceStatus.ok:
-        badgeColor = Colors.green.shade100;
-        textColor = Colors.green.shade900;
+        badgeColor = isDark ? const Color(0xFF1B3324) : const Color(0xFFEDF7ED);
+        textColor = isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32);
         statusText = 'OK';
         break;
       case ServiceStatus.noRecord:
@@ -152,7 +143,7 @@ class _ServiceCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -160,20 +151,19 @@ class _ServiceCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Text(overview.type.name, style: theme.textTheme.titleLarge),
+                  child: Text(overview.type.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(color: badgeColor, borderRadius: BorderRadius.circular(20)),
                   child: Text(statusText, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 12)),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.md),
             
-            // Status Details
             if (overview.status.status == ServiceStatus.noRecord)
-              Text('Log your first service to start tracking.', style: theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic))
+              Text('Log your first service to start tracking.', style: theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic, color: theme.colorScheme.onSurfaceVariant))
             else ...[
               if (overview.status.dueKm != null)
                 Text('Due at: ${overview.status.dueKm} km', style: theme.textTheme.bodyMedium),

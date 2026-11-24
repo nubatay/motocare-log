@@ -1,8 +1,3 @@
-// lib/features/dashboard/presentation/dashboard_screen.dart
-//
-// The main Home tab. Displays the active motorcycle, its estimated mileage,
-// upcoming services, and quick actions.
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -15,6 +10,7 @@ import '../../services/presentation/service_screen.dart';
 import '../../services/providers/service_provider.dart';
 import '../../services/presentation/log_service_screen.dart';
 import '../../odometer/presentation/update_odometer_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -34,7 +30,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (activeBike != null && activeBike.id != _lastLoadedBikeId) {
       _lastLoadedBikeId = activeBike.id;
       
-      // FIX: Wait until the current frame is done drawing before loading data
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _loadData(activeBike);
       });
@@ -45,7 +40,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final odoProvider = context.read<OdometerProvider>();
     final serviceProvider = context.read<ServiceProvider>();
 
-    // 1. Load odometer to get the estimated mileage
     await odoProvider.loadReadings(
       motorcycleId: bike.id,
       dailyDistanceKm: bike.dailyDistanceKm,
@@ -54,7 +48,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final estimatedOdo = odoProvider.estimate?.estimatedKm ?? bike.currentOdometer;
 
-    // 2. Load services using the estimated mileage
     if (mounted) {
       await serviceProvider.loadData(
         motorcycleId: bike.id,
@@ -70,8 +63,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final odoProvider = context.watch<OdometerProvider>();
     final serviceProvider = context.watch<ServiceProvider>();
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    // --- Empty State (No Active Bike) ---
     if (activeBike == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Dashboard')),
@@ -90,7 +83,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
-    // --- Loading State ---
     if (odoProvider.isLoading || serviceProvider.isLoading) {
       return Scaffold(
         appBar: AppBar(title: const Text('Dashboard')),
@@ -98,7 +90,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
-    // Filter for services that are Overdue or Due Soon
     final dueServices = serviceProvider.overviews
         .where((s) => s.status.status == ServiceStatus.overdue || s.status.status == ServiceStatus.dueSoon)
         .toList();
@@ -120,9 +111,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             // --- Active Bike Card ---
             Card(
-              color: theme.colorScheme.surfaceContainerHighest,
               child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -131,7 +121,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Text(activeBike.nickname, style: theme.textTheme.titleLarge),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.primaryContainer,
                             borderRadius: BorderRadius.circular(20),
@@ -143,25 +133,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text('Estimated mileage', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
-                      'Odometer: ${odoProvider.estimate?.estimatedKm ?? activeBike.currentOdometer} km (estimated)',
-                      style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                      '${odoProvider.estimate?.estimatedKm ?? activeBike.currentOdometer} km',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 36, 
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
+                    const SizedBox(height: AppSpacing.xs),
                     if (odoProvider.latestReading != null)
                       Text(
-                        'Last real reading: ${odoProvider.latestReading!.readingDate.year}-${odoProvider.latestReading!.readingDate.month.toString().padLeft(2, '0')}-${odoProvider.latestReading!.readingDate.day.toString().padLeft(2, '0')}',
-                        style: theme.textTheme.bodySmall,
+                        'Last real reading: ${odoProvider.latestReading!.valueKm} km on ${odoProvider.latestReading!.readingDate.month}/${odoProvider.latestReading!.readingDate.day}',
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                       ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.xl),
 
             // --- Next Services ---
             Text('Next services', style: theme.textTheme.titleLarge),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.md),
             if (dueServices.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
@@ -170,34 +167,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
             else
               ...dueServices.map((overview) {
                 final isOverdue = overview.status.status == ServiceStatus.overdue;
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(overview.type.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(
-                    isOverdue
-                        ? 'Was due at ${overview.status.dueKm ?? ''} km' 
-                        : 'Due soon',
-                  ),
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isOverdue ? theme.colorScheme.errorContainer : Colors.orange.shade200,
-                      borderRadius: BorderRadius.circular(8),
+                
+                // Colors matching the style guide
+                final bgColor = isOverdue 
+                    ? (isDark ? const Color(0xFF3B1A1D) : const Color(0xFFFDECEA))
+                    : (isDark ? const Color(0xFF33210A) : const Color(0xFFFFF4E5));
+                final txtColor = isOverdue 
+                    ? (isDark ? const Color(0xFFFF8A80) : const Color(0xFFD32F2F))
+                    : (isDark ? const Color(0xFFFFB74D) : const Color(0xFFED6C02));
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+                    title: Text(overview.type.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(
+                      isOverdue
+                          ? 'Was due at ${overview.status.dueKm ?? ''} km' 
+                          : 'Due soon',
                     ),
-                    child: Text(
-                      isOverdue ? 'Overdue' : 'Due soon',
-                      style: TextStyle(
-                        color: isOverdue ? theme.colorScheme.onErrorContainer : Colors.orange.shade900,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: bgColor,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        isOverdue ? 'Overdue' : 'Due soon',
+                        style: TextStyle(color: txtColor, fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                     ),
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => ServiceScreen(bike: activeBike),
+                      ));
+                    },
                   ),
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => ServiceScreen(bike: activeBike),
-                    ));
-                  },
                 );
               }),
             
@@ -211,7 +216,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => UpdateOdometerScreen(bike: activeBike), // <-- NEW
+                          builder: (_) => UpdateOdometerScreen(bike: activeBike),
                         ),
                       );
                     },
