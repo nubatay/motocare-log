@@ -13,91 +13,99 @@ class AppSpacing {
 class AppTheme {
   AppTheme._();
 
-  // Custom Colors from the Style Guide
   static const Color primaryBlue = Color(0xFF5A82F0);
   static const Color lightBg = Color(0xFFF6F5F0);
   static const Color darkBg = Color(0xFF121212);
   static const Color darkSurface = Color(0xFF1E1E1E);
 
   static ThemeData get light {
-    final base = ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      scaffoldBackgroundColor: lightBg,
-      colorScheme: const ColorScheme.light(
-        primary: primaryBlue,
-        surface: Colors.white,
-        onSurface: Color(0xFF1A1A1A),
-        error: Color(0xFFD32F2F),
-      ),
-    );
-    return _buildTheme(base);
+    return _buildTheme(isDark: false);
   }
 
   static ThemeData get dark {
-    final base = ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: darkBg,
-      colorScheme: const ColorScheme.dark(
-        primary: primaryBlue,
-        surface: darkSurface,
-        onSurface: Color(0xFFF5F5F5),
-        error: Color(0xFFE57373),
-      ),
-    );
-    return _buildTheme(base);
+    return _buildTheme(isDark: true);
   }
 
-  static ThemeData _buildTheme(ThemeData base) {
-    final isDark = base.brightness == Brightness.dark;
+  static ThemeData _buildTheme({required bool isDark}) {
+    // 1. Setup the color scheme
+    final colorScheme = isDark 
+        ? const ColorScheme.dark(
+            primary: primaryBlue,
+            surface: darkSurface,
+            onSurface: Color(0xFFF5F5F5),
+            error: Color(0xFFE57373),
+          )
+        : const ColorScheme.light(
+            primary: primaryBlue,
+            surface: Colors.white,
+            onSurface: Color(0xFF1A1A1A),
+            error: Color(0xFFD32F2F),
+          );
 
-    // Typography: Space Grotesk for headers, Inter for body
-    final textTheme = base.textTheme
-      .apply(fontFamily: GoogleFonts.inter().fontFamily)
-      .copyWith(
-      displayLarge: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold),
-      displayMedium: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold),
-      displaySmall: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold),
-      headlineLarge: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold),
-      headlineMedium: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold),
-      headlineSmall: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold),
-      titleLarge: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold),
-      titleMedium: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600),
+    // 2. Force text color based on theme
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
+
+        // 3. Create the TextTheme explicitly (avoids the copyWith bug)
+    final textTheme = TextTheme(
+      displayLarge: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold, color: textColor),
+      displayMedium: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold, color: textColor),
+      displaySmall: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold, color: textColor),
+      
+      headlineLarge: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold, color: textColor),
+      headlineMedium: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold, color: textColor),
+      headlineSmall: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold, color: textColor),
+      
+      titleLarge: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold, color: textColor, fontSize: 22), // For AppBars & Card Headers
+      titleMedium: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600, color: textColor),
+      titleSmall: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w500, color: textColor),
+      
+      bodyLarge: GoogleFonts.inter(color: textColor, fontSize: 16),
+      bodyMedium: GoogleFonts.inter(color: textColor, fontSize: 14),
+      bodySmall: GoogleFonts.inter(color: textColor.withValues(alpha: 0.7), fontSize: 12),
+      
+      labelLarge: GoogleFonts.inter(fontWeight: FontWeight.bold, color: textColor), // For Buttons
     );
 
-    return base.copyWith(
+    // 4. Build the entire ThemeData from scratch (avoids the copyWith bug)
+    return ThemeData(
+      useMaterial3: true,
+      brightness: isDark ? Brightness.dark : Brightness.light,
+      scaffoldBackgroundColor: isDark ? darkBg : lightBg,
+      colorScheme: colorScheme,
       textTheme: textTheme,
+      
       appBarTheme: AppBarTheme(
         backgroundColor: isDark ? darkBg : lightBg,
-        foregroundColor: isDark ? Colors.white : Colors.black,
+        foregroundColor: textColor,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: textTheme.titleLarge?.copyWith(fontSize: 22),
       ),
-      
-      // Pill-shaped buttons
+
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(52),
-          shape: const StadiumBorder(), // Fully rounded
+          shape: const StadiumBorder(), 
           textStyle: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ),
+
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(52),
           shape: const StadiumBorder(),
+          foregroundColor: textColor, 
           side: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade400),
           textStyle: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600),
         ),
       ),
 
-      // Rounded Input Fields
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: isDark ? darkSurface : Colors.white,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        labelStyle: TextStyle(color: textColor.withValues(alpha: 0.7)), 
+        hintStyle: TextStyle(color: textColor.withValues(alpha: 0.5)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
@@ -112,15 +120,14 @@ class AppTheme {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: base.colorScheme.error),
+          borderSide: BorderSide(color: colorScheme.error),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: base.colorScheme.error, width: 2),
+          borderSide: BorderSide(color: colorScheme.error, width: 2),
         ),
       ),
 
-      // Rounded Cards
       cardTheme: CardThemeData(
         elevation: isDark ? 0 : 2,
         color: isDark ? darkSurface : Colors.white,
