@@ -34,15 +34,6 @@ class _MyMotorcyclesScreenState extends State<MyMotorcyclesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Motorcycles'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Log out',
-            onPressed: () {
-              context.read<AuthProvider>().logout();
-            },
-          ),
-        ],
       ),
       body: RefreshIndicator(
         onRefresh: () => provider.loadMotorcycles(),

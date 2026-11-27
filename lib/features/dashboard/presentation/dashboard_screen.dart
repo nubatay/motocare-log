@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../motorcycles/data/motorcycle_repository.dart';
@@ -10,7 +11,6 @@ import '../../services/presentation/service_screen.dart';
 import '../../services/providers/service_provider.dart';
 import '../../services/presentation/log_service_screen.dart';
 import '../../odometer/presentation/update_odometer_screen.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -83,11 +83,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
+    // --- SKELETON LOADING STATE ---
     if (odoProvider.isLoading || serviceProvider.isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Dashboard')),
-        body: const Center(child: CircularProgressIndicator()),
-      );
+      return const _DashboardSkeleton();
     }
 
     final dueServices = serviceProvider.overviews
@@ -109,7 +107,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
-            // --- Active Bike Card ---
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -156,7 +153,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: AppSpacing.xl),
 
-            // --- Next Services ---
             Text('Next services', style: theme.textTheme.titleLarge),
             const SizedBox(height: AppSpacing.md),
             if (dueServices.isEmpty)
@@ -168,7 +164,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ...dueServices.map((overview) {
                 final isOverdue = overview.status.status == ServiceStatus.overdue;
                 
-                // Colors matching the style guide
                 final bgColor = isOverdue 
                     ? (isDark ? const Color(0xFF3B1A1D) : const Color(0xFFFDECEA))
                     : (isDark ? const Color(0xFF33210A) : const Color(0xFFFFF4E5));
@@ -208,7 +203,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             
             const SizedBox(height: AppSpacing.xl),
 
-            // --- Quick Actions ---
             Row(
               children: [
                 Expanded(
@@ -238,6 +232,140 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// -------------------------------------------------------------------------
+// SKELETON LOADING WIDGETS
+// -------------------------------------------------------------------------
+
+class _DashboardSkeleton extends StatefulWidget {
+  const _DashboardSkeleton();
+
+  @override
+  State<_DashboardSkeleton> createState() => _DashboardSkeletonState();
+}
+
+class _DashboardSkeletonState extends State<_DashboardSkeleton> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.3, end: 1.0).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Dashboard')),
+      body: FadeTransition(
+        opacity: _animation,
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          children: [
+            // Skeleton for Active Bike Card
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: const [
+                        _SkeletonBox(width: 100, height: 24), // Nickname
+                        _SkeletonBox(width: 60, height: 24, radius: 20), // Active Badge
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    const _SkeletonBox(width: 120, height: 14), // "Estimated mileage"
+                    const SizedBox(height: AppSpacing.sm),
+                    const _SkeletonBox(width: 200, height: 40), // The big number
+                    const SizedBox(height: AppSpacing.sm),
+                    const _SkeletonBox(width: 180, height: 14), // "Last real reading"
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            
+            // Skeleton for "Next services" header
+            const _SkeletonBox(width: 140, height: 24),
+            const SizedBox(height: AppSpacing.md),
+            
+            // Skeleton for 2 list items
+            ...List.generate(2, (index) => Card(
+              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        _SkeletonBox(width: 150, height: 18), // Service name
+                        SizedBox(height: AppSpacing.sm),
+                        _SkeletonBox(width: 100, height: 14), // Due details
+                      ],
+                    ),
+                    const _SkeletonBox(width: 80, height: 28, radius: 20), // Badge
+                  ],
+                ),
+              ),
+            )),
+            
+            const SizedBox(height: AppSpacing.xl),
+            
+            // Skeleton for Quick Actions
+            Row(
+              children: const [
+                Expanded(child: _SkeletonBox(width: double.infinity, height: 52, radius: 26)),
+                SizedBox(width: AppSpacing.md),
+                Expanded(child: _SkeletonBox(width: double.infinity, height: 52, radius: 26)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SkeletonBox extends StatelessWidget {
+  final double width;
+  final double height;
+  final double radius;
+
+  const _SkeletonBox({
+    required this.width,
+    required this.height,
+    this.radius = 8,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(radius),
       ),
     );
   }
